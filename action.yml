@@ -1,0 +1,33 @@
+name: PR Comment
+description: Post a comment on a pull request using mctx-bot
+
+inputs:
+  app-id:
+    required: true
+    description: GitHub App ID for mctx-bot
+  private-key:
+    required: true
+    description: GitHub App private key for mctx-bot
+  body:
+    required: true
+    description: Comment body (Markdown)
+
+runs:
+  using: composite
+  steps:
+    - name: Generate app token
+      id: app-token
+      uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+      with:
+        app-id: ${{ inputs.app-id }}
+        private-key: ${{ inputs.private-key }}
+
+    - name: Post PR comment
+      shell: bash
+      env:
+        GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        COMMENT_BODY: ${{ inputs.body }}
+      run: |
+        gh pr comment ${{ github.event.pull_request.number }} \
+          --repo ${{ github.repository }} \
+          --body "$COMMENT_BODY"
